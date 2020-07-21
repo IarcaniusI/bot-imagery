@@ -90,7 +90,7 @@ def process_comments_stream(my_username:str, subreddit, run_settings: dict) -> N
     separator = run_settings.get("separator")
 
     # process every comment obtained from reddit online stream
-    for comment in subreddit.stream.comments():
+    for comment in subreddit.stream.comments(skip_existing=True):
 
         # don't process youself and deleted comments
         if (comment.author.name != my_username.name) and (comment.author is not None):
@@ -120,7 +120,7 @@ def process_comments_stream(my_username:str, subreddit, run_settings: dict) -> N
 
                             message_subject = "UNKNOWN IMAGE"
                             print("UNKNOWN IMAGE:", message_subject)
-                            message_text = image_name + "\nwww.reddit.com{}".format(comment.permalink)
+                            message_text = image_name + "\n\nwww.reddit.com{}".format(comment.permalink)
                             if not NO_NOTIFY:
                                 reply_time = datetime.now().isoformat().replace("T", " ")
                                 print(reply_time, "| UNKNOWN:", message_subject, ":", message_text)
@@ -138,7 +138,7 @@ def process_comments_stream(my_username:str, subreddit, run_settings: dict) -> N
                     answer_comment = answer_comment.replace(image[0], image[1], 1)
 
                 # prepend catch phrase when want to create reply
-                answer_comment = "^(Бип-боп, я {} — бот.)\n\n".format(BOT_NAME) + answer_comment + "\n\n^(Infobit)"
+                answer_comment = "^(Бип-боп, я {} — бот.)\n\n".format(BOT_NAME) + answer_comment + "\n\n^([PikabuОбсуждение](https://www.reddit.com) [GitHub](https://github.com/IarcaniusI/bot-imagery))"
 
                 if not NO_NOTIFY:
                     reply_time = datetime.now().isoformat().replace("T", " ")
@@ -164,7 +164,7 @@ def process_comments_stream(my_username:str, subreddit, run_settings: dict) -> N
 
                             if ignore_reply_count == 0:
                                 message_subject = "BOT-{} FORWARD REPLY".format(BOT_NAME)
-                                message_text = comment_body + "\nwww.reddit.com{}".format(comment.permalink)
+                                message_text = comment_body + "\n\nwww.reddit.com{}".format(comment.permalink)
 
                                 if not NO_NOTIFY:
                                     reply_time = datetime.now().isoformat().replace("T", " ")
