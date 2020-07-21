@@ -12,8 +12,7 @@ PROCESS_NAME = "bot-imagery"
 BOT_NAME = "Imagery"
 NO_NOTIFY =False
 
-# register enhancing for use: https://www.reddit.com/prefs/apps
-
+# register bot for use: https://www.reddit.com/prefs/apps
 def signal_term_handler(signal, frame):
     exit_time = datetime.now().isoformat().replace("T", " ")
     print(exit_time, '|', PROCESS_NAME, 'terminated')
@@ -133,7 +132,7 @@ def process_comments_stream(my_username:str, subreddit, run_settings: dict) -> N
                             answer_images.append(image)
 
             if len(answer_images) > 0:
-                # form user sentense with links        
+                # form user sentense with links
                 answer_comment = comment_body
                 for image in answer_images:
                     answer_comment = answer_comment.replace(image[0], image[1], 1)
@@ -149,7 +148,7 @@ def process_comments_stream(my_username:str, subreddit, run_settings: dict) -> N
                     comment.reply(answer_comment)
                 except Exception as err:
                     print(reply_time, "| Can't send reply to user '", comment.author, "':", err)
-                    
+
             if run_settings.get("forward_reply"):
                 parent = comment.parent()
                 # parent of comment is another comment and not deleted
@@ -223,7 +222,7 @@ def load_run_settings(filename: str) -> dict:
         if type(first_dict) is not list:
             critical_print("Incorrect property 'dict' in file '", filename, "'")
         elif type(run_settings.get("search_name")) is not str:
-            critical_print("Incorrect property 'search_name' in file '", filename, "'")            
+            critical_print("Incorrect property 'search_name' in file '", filename, "'")
         elif type(run_settings.get("separator")) is not str:
             critical_print("Incorrect property 'separator' in file '", filename, "'")
         elif type(run_settings.get("forward_reply")) is not bool:
