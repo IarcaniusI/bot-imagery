@@ -58,13 +58,13 @@ def main():
 
     # reddit authentication
     try:
-        my_username, subreddit = auth(auth_settings)
+        my_user, subreddit = auth(auth_settings)
     except Exception as err:
         critical_print("Can't auth : ", err)
 
     # script main function executing
     try:
-        process_comments_stream(my_username, subreddit, run_settings)
+        process_comments_stream(my_user, subreddit, run_settings)
     except Exception as err:
         critical_print("Runtime error : ", err)
 
@@ -74,16 +74,16 @@ def auth(s: dict):
     reddit = praw.Reddit(user_agent=s.get("user_agent"),
                             client_id=s.get("client_id"), client_secret=s.get("client_secret"),
                             username=s.get("username"), password=s.get("password"))
-    my_username = reddit.user.me()
+    my_user = reddit.user.me()
 
     auth_time = datetime.now().isoformat().replace("T", " ")
-    print(auth_time, "|", PROCESS_NAME, "authenticated, user name: '", my_username, "'")
+    print(auth_time, "|", PROCESS_NAME, "authenticated, user name: '", my_user, "'")
     subreddit = reddit.subreddit(s.get("subreddit"))
     print("Subredit name: ", subreddit)
-    return my_username, subreddit
+    return my_user, subreddit
 
 # main sctipt function
-def process_comments_stream(my_username:str, subreddit, run_settings: dict) -> None:
+def process_comments_stream(my_user, subreddit, run_settings: dict) -> None:
 
     compiled_search = re.compile(run_settings.get("search_name"), re.IGNORECASE)
     image_dict = run_settings.get("dict")
@@ -93,7 +93,7 @@ def process_comments_stream(my_username:str, subreddit, run_settings: dict) -> N
     for comment in subreddit.stream.comments(skip_existing=True):
 
         # don't process youself and deleted comments
-        if (comment.author.name != my_username.name) and (comment.author is not None):
+        if (comment.author.name != my_user.name) and (comment.author is not None):
             comment_body = comment.body
 
             #find all files names in comment
@@ -138,7 +138,7 @@ def process_comments_stream(my_username:str, subreddit, run_settings: dict) -> N
                     answer_comment = answer_comment.replace(image[0], image[1], 1)
 
                 # prepend catch phrase when want to create reply
-                answer_comment = "^(Бип-боп, я {} — бот.)\n\n".format(BOT_NAME) + answer_comment + "\n\n^([PikabuОбсуждение](https://www.reddit.com) [GitHub](https://github.com/IarcaniusI/bot-imagery))"
+                answer_comment = answer_comment + "\n\n^(Бип-боп, я {} — бот.)\n\n".format(BOT_NAME) + "\n\n^([PikabuОбсуждение](https://www.reddit.com/r/Pikabu/comments/hvd1pf/%D0%B1%D0%BE%D1%82%D1%81%D0%BB%D0%BE%D0%B2%D0%B0%D1%80%D1%8C_%D0%B4%D0%BB%D1%8F_%D0%BF%D0%BE%D0%B4%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B8_%D0%BA%D0%B0%D1%80%D1%82%D0%B8%D0%BD%D0%BE%D0%BA/) | [GitHub](https://github.com/IarcaniusI/bot-imagery))"
 
                 if not NO_NOTIFY:
                     reply_time = datetime.now().isoformat().replace("T", " ")
@@ -153,7 +153,7 @@ def process_comments_stream(my_username:str, subreddit, run_settings: dict) -> N
                 parent = comment.parent()
                 # parent of comment is another comment and not deleted
                 if (type(parent) is praw.models.reddit.comment.Comment) and (parent.author is not None):
-                    if parent.author.name == my_username.name:
+                    if parent.author.name == my_user.name:
                         pre_parent = parent.parent()
                         if (type(pre_parent) is praw.models.reddit.comment.Comment) and (pre_parent.author is not None):
                             # check, if there are no ignore expressions then forward reply message to author of comment
