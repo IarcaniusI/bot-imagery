@@ -103,8 +103,15 @@ def process_comments_stream(my_user, subreddit, run_settings: dict) -> None:
             #find every image_name in comment
             for substitute in substitutes:
                 for phrase in substitute:
+
+                    # check, maybe phrase is already link or something also deprecated
+                    ignore_name = False
+                    for ignore in run_settings.get("ignore_search_name_compiled"):
+                        if ignore.search(phrase):
+                            ignore_name = True
+
                     image_name_list = phrase.split(separator)
-                    if len(image_name_list) > 1:
+                    if (len(image_name_list) > 1) and (not ignore_name):
                         image_name = image_name_list[0].lower()
 
                         #remove delimeters
@@ -138,7 +145,7 @@ def process_comments_stream(my_user, subreddit, run_settings: dict) -> None:
                     answer_comment = answer_comment.replace(image[0], image[1], 1)
 
                 # prepend catch phrase when want to create reply
-                answer_comment = answer_comment + "\n\n^(Бип-боп, я {} — бот.)\n\n".format(BOT_NAME) + "\n\n^([PikabuОбсуждение](https://www.reddit.com/r/Pikabu/comments/hvd1pf/%D0%B1%D0%BE%D1%82%D1%81%D0%BB%D0%BE%D0%B2%D0%B0%D1%80%D1%8C_%D0%B4%D0%BB%D1%8F_%D0%BF%D0%BE%D0%B4%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B8_%D0%BA%D0%B0%D1%80%D1%82%D0%B8%D0%BD%D0%BE%D0%BA/) | [GitHub](https://github.com/IarcaniusI/bot-imagery))"
+                answer_comment = answer_comment + "\n\n^(Бип-боп: )[^(РекабуОбсуждение)](https://www.reddit.com/r/Pikabu/comments/hvd1pf/%D0%B1%D0%BE%D1%82%D1%81%D0%BB%D0%BE%D0%B2%D0%B0%D1%80%D1%8C_%D0%B4%D0%BB%D1%8F_%D0%BF%D0%BE%D0%B4%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B8_%D0%BA%D0%B0%D1%80%D1%82%D0%B8%D0%BD%D0%BE%D0%BA/)^( | )[^(GitHub)](https://github.com/IarcaniusI/bot-imagery)"
 
                 if not NO_NOTIFY:
                     reply_time = datetime.now().isoformat().replace("T", " ")
@@ -229,7 +236,13 @@ def load_run_settings(filename: str) -> dict:
             critical_print("Incorrect property 'forward_reply' in file '", filename, "'")
         elif type(run_settings.get("ignore_reply")) is not list:
             critical_print("Incorrect property 'ignore_reply' in file '", filename, "'")
+        elif type(run_settings.get("ignore_search_name")) is not list:
+            critical_print("Incorrect property 'ignore_search_name' in file '", filename, "'")
         else:
+
+            for i, value in enumerate(run_settings.get("ignore_search_name")):
+                if type(value) is not str:
+                    critical_print("Incorrect value number '", i, "' in 'ignore_search_name' in file '", filename, "'")
 
             for i, value in enumerate(run_settings.get("ignore_reply")):
                 if type(value) is not str:
@@ -267,6 +280,12 @@ def load_run_settings(filename: str) -> dict:
                 image_name = image_name.replace("_", "")
                 image_name = image_name.replace("-", "")
                 image_dict[image_name] = images
+
+    # add compiled regexes 'ignore_search_name'
+    run_settings["ignore_search_name_compiled"] = []
+    for ignore in run_settings.get("ignore_search_name"):
+        compiled = re.compile(ignore, re.IGNORECASE)
+        run_settings["ignore_search_name_compiled"].append(compiled)
 
     # add compiled regexes 'ignore_replies'
     run_settings["ignore_reply_compiled"] = []
